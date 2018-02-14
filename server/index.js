@@ -1,54 +1,33 @@
-const express = require('express');
-// const parser = require('body-parser');
-// const logger = require('morgan');
-const path = require('path');
+const http = require('http');
+const url = require('url');
 const routes = require('./requestRoutes.js');
-
-// const http = require('http');
-// const url = require('url');
-// const routes = require('./requestRoutes.js');
-// const request = require('./requests.js')
+const request = require('./requests.js')
 
 const port = 9001;
 
-const app = express();
+const ip = '127.0.0.1';
 
-// app.use(parser.json());
-// app.use(parser.urlencoded({extended: true}));
-// app.use(logger('dev'));
+const router ={
+  '/': routes.static,
+  '/bundle.js': routes.static,
+  '/api/mymemes': routes.mymemes,
+};
 
-app.use(express.static(path.join(__dirname, '../client/static')))
+const server = http.createServer((req, res) => {
 
-const customParser = function(req, res, next){
-  let data = '';
-  req.on('data', function(chunk){
-    data += chunk;
-  })
-  req.on('end', function() {
-    let allData = data.split('=');
-    console.log('Retrieved the following data: ', allData);
-    console.log('the req.body is, ', req.body)
-    req.body = allData;
-    next();
-  })
-}
+  console.log('serving request type: ', req.method, ' for url: ', req.url);
 
-app.use(customParser);
+  const route = router[url.parse(req.url).pathname]
 
-const customLogger = function(req, res, next){
-  console.log(
-    'Servering request type: ',
-    req.method,
-    ' for URL: ',
-    req.url
-  )
-  next();
-}
+  console.log(route);
 
-app.use(customLogger);
-
-app.use('/api', routes);
-
-app.listen(port, () => {
-  console.log('Hey1 Listening! port: ', port);
+  if (route){
+    route[req.method](req,res)
+  } else {
+    request.sendResponse(res, '', 404);
+  }
 })
+
+console.log('Hey! Listening! port: ', port)
+
+server.listen(port, ip)
