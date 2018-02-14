@@ -1,6 +1,6 @@
 const http = require('http');
 const url = require('url');
-// TODO import routes ans requests
+// TODO import routes and requests
 
 // TODO define port and ip
 
